@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Прогноз стоимости недвижимости</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f4f4f4;
+            color: #222222;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 480px;
+            margin: 24px auto;
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px 0 rgba(0,0,0,0.07), 0 1.5px 6px 0 rgba(0,0,0,0.03);
+            padding: 24px 16px 32px 16px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 24px;
+            font-size: 2rem;
+        }
+        .filter-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+        .filter-label {
+            font-size: 15px;
+            color: #888888;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .chip {
+            padding: 7px 16px;
+            border-radius: 20px;
+            background: #f4f4f4;
+            border: 1.5px solid #888888;
+            color: #222222;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.15s, border 0.15s, color 0.15s;
+            user-select: none;
+        }
+        .chip.selected {
+            background: #0088cc;
+            color: #fff;
+            border-color: #0088cc;
+        }
+        .chip-error {
+            border-color: #e74c3c !important;
+            background: #fff0f0;
+        }
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+        .input-row > div { width: 100%; }
+        .input-row input {
+            flex: 1;
+        }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number], select, .region-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 2px solid #b0b0b0;
+            background: #fcfcfc;
+            color: #222222;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border 0.25s, box-shadow 0.25s;
+            margin-bottom: 0;
+        }
+        input[type=number]:focus, select:focus, .region-input:focus {
+            border: 2px solid #0088cc;
+            box-shadow: 0 0 0 2px rgba(0,136,204,0.10);
+            background: #fff;
+        }
+        input[type=number]::placeholder, .region-input::placeholder {
+            color: #bbbbbb;
+            opacity: 1;
+        }
+        .input-error, .region-input.input-error {
+            border: 2px solid #e74c3c !important;
+            background: #fff0f0;
+        }
+        .region-input {
+            padding-left: 38px;
+            margin-bottom: 0;
+        }
+        .input-error {
+            border: 1.5px solid #e74c3c !important;
+            background: #fff0f0;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1.5px solid #888888;
+            background: #ffffff;
+            color: #222222;
+            font-size: 15px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .field-error {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 2px;
+            min-height: 16px;
+        }
+        .predict-btn {
+            width: 100%;
+            padding: 15px;
+            background: #0088cc;
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            cursor: pointer;
+            margin-top: 18px;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .predict-btn:active {
+            background: #006699;
+            transform: scale(0.98);
+        }
+        .result-block {
+            margin-top: 28px;
+            text-align: center;
+            background: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            padding: 18px 10px;
+            animation: fadeResult 0.5s;
+        }
+        @keyframes fadeResult {
+            from { opacity: 0; transform: translateY(20px);}
+            to   { opacity: 1; transform: translateY(0);}
+        }
+        .result-price {
+            font-size: 30px;
+            font-weight: bold;
+            color: #0088cc;
+            margin-bottom: 8px;
+        }
+        .result-desc {
+            color: #888888;
+            font-size: 15px;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 12px 2vw 24px 2vw; }
+        }
+        .suggest-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1.5px solid #888888;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+            z-index: 10;
+            max-height: 180px;
+            overflow-y: auto;
+            animation: fadeSuggest 0.18s;
+            display: none;
+        }
+        .suggest-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 15px;
+            color: #222222;
+            transition: background 0.15s, color 0.15s;
+        }
+        .suggest-item:hover, .suggest-item.selected {
+            background: #0088cc;
+            color: #fff;
+        }
+        @keyframes fadeSuggest {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .region-input {
+            width: 100%;
+            padding: 10px 12px 10px 38px;
+            border-radius: 10px;
+            border: 1.5px solid #888888;
+            background: #ffffff;
+            color: #222222;
+            font-size: 15px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border 0.2s, box-shadow 0.2s;
+            margin-bottom: 0;
+        }
+        .region-input:focus {
+            border: 1.5px solid #0088cc;
+            box-shadow: 0 2px 8px rgba(0,136,204,0.07);
+        }
+        .region-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🏠 Прогноз стоимости недвижимости</h2>
+        <div style="margin-bottom:18px;color:#555;font-size:15px;text-align:center;line-height:1.4;">
+            Сервис для оценки <b>покупки, продажи и аренды</b> недвижимости.<br>Выберите параметры и получите прогноз стоимости и аналоги с рынка.
+        </div>
+        <!-- Блок выбора типа сделки -->
+        <div class="filter-group">
+            <span class="filter-label">Тип сделки</span>
+            <div class="chip-list" id="deal-type-list"></div>
+            <div class="field-error" id="error-deal-type"></div>
+            <div style="color:#888;font-size:13px;margin-top:4px;line-height:1.3;">
+                <b>Покупка/Продажа</b> — узнать рыночную стоимость для покупки или продажи квартиры.<br>
+                <b>Аренда</b> — узнать стоимость аренды или сдачи квартиры.
+            </div>
+        </div>
+        <!-- Блок выбора региона и города -->
+        <div class="filter-group">
+            <span class="filter-label">Регион</span>
+            <div style="position:relative;">
+                <svg class="region-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 12.5C13.6569 12.5 15 11.1569 15 9.5C15 7.84315 13.6569 6.5 12 6.5C10.3431 6.5 9 7.84315 9 9.5C9 11.1569 10.3431 12.5 12 12.5Z" stroke="var(--tg-theme-hint-color, #888)" stroke-width="1.5"/>
+                    <path d="M12 22C14 18 20 15.4183 20 10C20 5.58172 16.4183 2 12 2C7.58172 2 4 5.58172 4 10C4 15.4183 10 18 12 22Z" stroke="var(--tg-theme-hint-color, #888)" stroke-width="1.5"/>
+                </svg>
+                <input type="text" id="regionInput" class="region-input" placeholder="Выберите регион" autocomplete="off">
+                <div id="regionSuggest" class="suggest-list"></div>
+            </div>
+            <div class="field-error" id="error-region"></div>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">Город</span>
+            <div style="position:relative;">
+                <svg class="region-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 12.5C13.6569 12.5 15 11.1569 15 9.5C15 7.84315 13.6569 6.5 12 6.5C10.3431 6.5 9 7.84315 9 9.5C9 11.1569 10.3431 12.5 12 12.5Z" stroke="var(--tg-theme-hint-color, #888)" stroke-width="1.5"/>
+                    <path d="M12 22C14 18 20 15.4183 20 10C20 5.58172 16.4183 2 12 2C7.58172 2 4 5.58172 4 10C4 15.4183 10 18 12 22Z" stroke="var(--tg-theme-hint-color, #888)" stroke-width="1.5"/>
+                </svg>
+                <input type="text" id="cityInput" class="region-input" placeholder="Выберите город" autocomplete="off" disabled>
+                <div id="citySuggest" class="suggest-list"></div>
+            </div>
+            <div class="field-error" id="error-city"></div>
+        </div>
+        <!-- Блок выбора типа здания -->
+        <div class="filter-group">
+            <span class="filter-label">Тип здания</span>
+            <div class="chip-list" id="building-type-list"></div>
+            <div class="field-error" id="error-building-type"></div>
+        </div>
+        <!-- Блок выбора типа объекта -->
+        <div class="filter-group">
+            <span class="filter-label">Тип объекта</span>
+            <div class="chip-list" id="object-type-list"></div>
+            <div class="field-error" id="error-object-type"></div>
+        </div>
+        <!-- Блок выбора количества комнат -->
+        <div class="filter-group">
+            <span class="filter-label">Количество комнат</span>
+            <div class="chip-list" id="rooms-list"></div>
+            <div class="field-error" id="error-rooms"></div>
+        </div>
+        <!-- Блок ввода этажа и этажности -->
+        <div class="filter-group">
+            <span class="filter-label">Этаж / Этажей в доме</span>
+            <div class="input-row">
+                <div>
+                    <input type="number" id="level" placeholder="Этаж" min="1" max="20">
+                    <div class="field-error" id="error-level"></div>
+                </div>
+                <div>
+                    <input type="number" id="levels" placeholder="Всего этажей" min="1" max="20">
+                    <div class="field-error" id="error-levels"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Блок ввода площади и площади кухни -->
+        <div class="filter-group">
+            <span class="filter-label">Площадь (м²) / Кухня (м²)</span>
+            <div class="input-row">
+                <div>
+                    <input type="number" id="area" placeholder="Общая площадь" min="10" max="200">
+                    <div class="field-error" id="error-area"></div>
+                </div>
+                <div>
+                    <input type="number" id="kitchen_area" placeholder="Площадь кухни" min="3" max="50">
+                    <div class="field-error" id="error-kitchen_area"></div>
+                </div>
+            </div>
+        </div>
+        <button class="predict-btn" onclick="calculate()">Показать прогноз</button>
+        <div id="result" style="display:none"></div>
+    </div>
+    <script>
+        // --- Категории ---
+        const buildingTypes = [
+            {label: "Иное", value: 0},
+            {label: "Панельный", value: 1},
+            {label: "Монолитный", value: 2},
+            {label: "Кирпичный", value: 3},
+            {label: "Блочный", value: 4},
+            {label: "Деревянный", value: 5}
+        ];
+        const objectTypes = [
+            {label: "Вторичный рынок", value: 1},
+            {label: "Новостройки", value: 2}
+        ];
+        const rooms = [
+            {label: "Студия", value: -1},
+            {label: "1", value: 1},
+            {label: "2", value: 2},
+            {label: "3", value: 3},
+            {label: "4", value: 4},
+            {label: "5+", value: 5}
+        ];
+        const dealTypes = [
+            {label: "Покупка/Продажа", value: "sale"},
+            {label: "Аренда", value: "rent"}
+        ];
+
+        // --- Элементы UI ---
+        const regionInput = document.getElementById('regionInput');
+        const regionSuggest = document.getElementById('regionSuggest');
+        const cityInput = document.getElementById('cityInput');
+        const citySuggest = document.getElementById('citySuggest');
+        let regions = [];
+        let cities = [];
+        let selectedRegion = '';
+        let selectedCity = '';
+
+        // --- Инициализация чипов ---
+        let selectedChips = {
+            'deal-type-list': null,
+            'building-type-list': null,
+            'object-type-list': null,
+            'rooms-list': null
+        };
+
+        function renderChips(list, containerId, single=true) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            list.forEach((item, idx) => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.textContent = item.label || item;
+                chip.dataset.value = item.value !== undefined ? item.value : item;
+                chip.onclick = () => {
+                    if (single) {
+                        container.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+                        chip.classList.add('selected');
+                        selectedChips[containerId] = chip.dataset.value;
+                    } else {
+                        chip.classList.toggle('selected');
+                    }
+                };
+                if (selectedChips[containerId] && chip.dataset.value == selectedChips[containerId]) {
+                    chip.classList.add('selected');
+                }
+                container.appendChild(chip);
+            });
+        }
+
+        // Инициализация чипов
+        renderChips(buildingTypes, 'building-type-list');
+        renderChips(objectTypes, 'object-type-list');
+        renderChips(rooms, 'rooms-list');
+        renderChips(dealTypes, 'deal-type-list');
+
+        // --- Функции автокомплита ---
+        function showSuggestions(input, container, items) {
+            container.innerHTML = '';
+            if (!items.length) {
+                container.style.display = 'none';
+                return;
+            }
+            items.slice(0, 50).forEach(item => { // показываем до 50 регионов
+                const div = document.createElement('div');
+                div.className = 'suggest-item';
+                div.textContent = item;
+                div.onclick = () => {
+                    input.value = item;
+                    container.style.display = 'none';
+                    if (input === regionInput) {
+                        selectedRegion = item;
+                        cityInput.value = '';
+                        cityInput.disabled = true;
+                        cityInput.placeholder = 'Загрузка городов...';
+                        console.log('Загружаем города для региона:', item);
+                        loadCities(item);
+                        setTimeout(() => cityInput.focus(), 100); // автофокус на город
+                    }
+                    if (input === cityInput) {
+                        container.style.display = 'none';
+                    }
+                };
+                container.appendChild(div);
+            });
+            container.style.display = 'block';
+        }
+
+        async function loadCities(region) {
+            cityInput.disabled = true;
+            cityInput.value = '';
+            cityInput.placeholder = 'Загрузка городов...';
+            cities = [];
+            selectedCity = '';
+            
+            try {
+                const response = await fetch(`/api/cities?region=${encodeURIComponent(region)}`);
+                if (!response.ok) throw new Error('Ошибка загрузки городов');
+                
+                const data = await response.json();
+                cities = data.sort((a, b) => a.localeCompare(b, 'ru'));
+                
+                cityInput.disabled = false;
+                cityInput.placeholder = 'Введите название города';
+                console.log(`Загружено городов для ${region}:`, cities.length);
+                
+                // Показываем все города региона
+                showSuggestions(cityInput, citySuggest, cities);
+                
+            } catch (error) {
+                console.error('Ошибка загрузки городов:', error);
+                cityInput.disabled = false;
+                cityInput.placeholder = 'Ошибка загрузки городов';
+                alert('Ошибка загрузки городов для выбранного региона');
+            }
+        }
+
+        // --- Обработчики событий ---
+        regionInput.addEventListener('input', function() {
+            const val = this.value.trim().toLowerCase();
+            if (val.length >= 2) {
+                const filtered = regions.filter(r => r.toLowerCase().includes(val));
+                showSuggestions(regionInput, regionSuggest, filtered);
+            } else {
+                regionSuggest.innerHTML = '';
+            }
+        });
+
+        regionInput.addEventListener('focus', function() {
+            if (this.value.trim() === '') {
+                showSuggestions(regionInput, regionSuggest, regions);
+            } else {
+                const val = this.value.trim().toLowerCase();
+                const filtered = regions.filter(r => r.toLowerCase().includes(val));
+                showSuggestions(regionInput, regionSuggest, filtered);
+            }
+        });
+
+        cityInput.addEventListener('input', function() {
+            if (!selectedRegion) return;
+            
+            const val = this.value.trim().toLowerCase();
+            if (val.length >= 2) {
+                const filtered = cities.filter(c => c.toLowerCase().includes(val));
+                showSuggestions(cityInput, citySuggest, filtered);
+            } else {
+                citySuggest.innerHTML = '';
+            }
+        });
+
+        cityInput.addEventListener('focus', function() {
+            if (!selectedRegion) {
+               showFieldError('regionInput', 'error-region', 'Сначала выберите регион');
+                this.blur();
+                return;
+            }
+            
+            if (this.value.trim() === '') {
+                showSuggestions(cityInput, citySuggest, cities);
+            } else {
+                const val = this.value.trim().toLowerCase();
+                const filtered = cities.filter(c => c.toLowerCase().includes(val));
+                showSuggestions(cityInput, citySuggest, filtered);
+            }
+        });
+
+        // Скрытие подсказок при клике вне полей
+        document.addEventListener('click', function(e) {
+            if (!regionInput.contains(e.target) && !regionSuggest.contains(e.target)) {
+                regionSuggest.innerHTML = '';
+            }
+            if (!cityInput.contains(e.target) && !citySuggest.contains(e.target)) {
+                citySuggest.innerHTML = '';
+            }
+        });
+
+        // Функция для выбора города
+        function onCitySelect(cityName) {
+            cityInput.value = cityName;
+            selectedCity = cityName;
+            citySuggest.style.display = 'none';
+
+            // Дополнительная проверка: город должен быть в выбранном регионе
+            if (selectedRegion) {
+                const citiesInRegion = cities;
+                if (!citiesInRegion.includes(cityName)) {
+                    showFieldError('cityInput', 'error-city', 'Этот город не принадлежит выбранному региону');
+                } else {
+                    document.getElementById('error-city').textContent = '';
+                    cityInput.classList.remove('input-error');
+                }
+            }
+        }
+
+        // При загрузке страницы очищаем поля регион и город
+        window.addEventListener('DOMContentLoaded', function() {
+            regionInput.value = '';
+            cityInput.value = '';
+            cityInput.disabled = true;
+            cityInput.placeholder = 'Выберите регион';
+        });
+
+        // Загрузка регионов при старте
+        fetch('/api/regions')
+            .then(res => {
+                if (!res.ok) throw new Error('Ошибка сети');
+                return res.json();
+            })
+            .then(data => {
+                regions = data.sort((a, b) => a.localeCompare(b, 'ru'));
+                console.log('Загружено регионов:', regions.length);
+            })
+            .catch(e => {
+                regions = [];
+                console.error('Ошибка загрузки регионов:', e);
+                alert('Ошибка загрузки регионов. Проверьте соединение или попробуйте позже.');
+            });
+
+        // --- Валидация и расчет ---
+        function clearFieldErrors() {
+            document.querySelectorAll('.field-error').forEach(e => e.textContent = '');
+            document.querySelectorAll('.input-error').forEach(e => e.classList.remove('input-error'));
+            document.querySelectorAll('.chip-list').forEach(e => e.classList.remove('chip-error'));
+        }
+
+        function showFieldError(inputId, errorId, message) {
+            document.getElementById(errorId).textContent = message;
+            document.getElementById(inputId).classList.add('input-error');
+        }
+
+        function showChipError(errorId, message, chipListId) {
+            document.getElementById(errorId).textContent = message;
+            document.getElementById(chipListId).classList.add('chip-error');
+        }
+
+        function getSelected(containerId) {
+            const sel = document.querySelector(`#${containerId} .chip.selected`);
+            if (sel) return sel.dataset.value;
+            return selectedChips[containerId] || null;
+        }
+
+        async function calculate() {
+            clearFieldErrors();
+            let hasError = false;
+
+            const region = selectedRegion || regionInput.value.trim();
+            const city = selectedCity || cityInput.value.trim();
+            const building_type = getSelected('building-type-list');
+            const object_type = getSelected('object-type-list');
+            const roomsVal = getSelected('rooms-list');
+            const level = document.getElementById('level').value;
+            const levels = document.getElementById('levels').value;
+            const area = document.getElementById('area').value;
+            const kitchen_area = document.getElementById('kitchen_area').value;
+            const deal_type = getSelected('deal-type-list');
+
+            // Валидация
+            if (!region || !regions.some(r => r.trim().toLowerCase() === region.trim().toLowerCase())) {
+                showFieldError('regionInput', 'error-region', 'Выберите регион из списка');
+                hasError = true;
+            }
+            if (!city) {
+                showFieldError('cityInput', 'error-city', 'Выберите город');
+                hasError = true;
+            }
+            if (!building_type || !buildingTypes.some(t => String(t.value) === String(building_type))) {
+                showChipError('error-building-type', 'Выберите тип здания из списка', 'building-type-list');
+                hasError = true;
+            }
+            if (!object_type || !objectTypes.some(t => String(t.value) === String(object_type))) {
+                showChipError('error-object-type', 'Выберите тип объекта из списка', 'object-type-list');
+                hasError = true;
+            }
+            if (!roomsVal || !rooms.some(t => String(t.value) === String(roomsVal))) {
+                showChipError('error-rooms', 'Выберите количество комнат из списка', 'rooms-list');
+                hasError = true;
+            }
+            if (!level) {
+                showFieldError('level', 'error-level', 'Заполните этаж');
+                hasError = true;
+            }
+            if (!levels) {
+                showFieldError('levels', 'error-levels', 'Заполните этажность');
+                hasError = true;
+            }
+            if (!area) {
+                showFieldError('area', 'error-area', 'Заполните площадь');
+                hasError = true;
+            }
+            if (!kitchen_area) {
+                showFieldError('kitchen_area', 'error-kitchen_area', 'Заполните кухню');
+                hasError = true;
+            }
+            if (!deal_type || !dealTypes.some(t => String(t.value) === String(deal_type))) {
+                showChipError('error-deal-type', 'Выберите тип сделки из списка', 'deal-type-list');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            const resultBlock = document.getElementById('result');
+            resultBlock.style.display = 'none';
+            resultBlock.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        region: region,
+                        city: city,
+                        building_type: building_type,
+                        object_type: object_type,
+                        level: Number(level),
+                        levels: Number(levels),
+                        rooms: Number(roomsVal),
+                        area: Number(area),
+                        kitchen_area: Number(kitchen_area) || Number(area) * 0.2,
+                        deal_type: deal_type
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    resultBlock.innerHTML = `<div class="result-block">
+                        <div class="result-price">${data.price.toLocaleString('ru-RU')} ₽</div>
+                        <div class="result-desc">Ориентировочная стоимость по введённым параметрам</div>
+                        <div style="margin-top:16px;text-align:left;color:#666;">
+                            <div><strong>Регион:</strong> ${data.region}</div>
+                            <div><strong>Город:</strong> ${data.city || 'Не указан'}</div>
+                            <div><strong>Площадь:</strong> ${data.area} м²</div>
+                            <div><strong>Комнат:</strong> ${data.rooms}</div>
+                            <div><strong>Цена за м²:</strong> ${data.price_per_sqm.toLocaleString('ru-RU')} ₽</div>
+                        </div>
+                    </div>`;
+                } else {
+                    resultBlock.innerHTML = `<div class="result-block"><div class="result-desc">${data.error || 'Ошибка расчёта'}</div></div>`;
+                }
+                resultBlock.style.display = 'block';
+            } catch (e) {
+                resultBlock.innerHTML = `<div class="result-block"><div class="result-desc">Ошибка соединения с сервером</div></div>`;
+                resultBlock.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
