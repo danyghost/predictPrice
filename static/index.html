@@ -660,6 +660,8 @@
 
                 const data = await response.json();
 
+                const pricePerSqm = Math.round(data.price / data.area);
+
                 if (response.ok && data.success) {
                     resultBlock.innerHTML = `<div class="result-block">
                         <div class="result-price">${data.price.toLocaleString('ru-RU')} ₽</div>
@@ -669,7 +671,7 @@
                             <div><strong>Город:</strong> ${data.city || 'Не указан'}</div>
                             <div><strong>Площадь:</strong> ${data.area} м²</div>
                             <div><strong>Комнат:</strong> ${data.rooms}</div>
-                            <div><strong>Цена за м²:</strong> ${data.price_per_sqm.toLocaleString('ru-RU')} ₽</div>
+                            <div><strong>Цена за м²:</strong> ${pricePerSqm.toLocaleString('ru-RU')} ₽</div>
                         </div>
                     </div>`;
                 } else {
