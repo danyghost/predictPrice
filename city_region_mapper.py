@@ -53,3 +53,49 @@ class CityRegionMapper:
 
         cities_in_region = self.get_cities_by_region(region_name)
         return any(city.lower() == city_name for city in cities_in_region)
+
+    def get_all_locations(self):
+        """Возвращает все локации с группировкой"""
+        locations = []
+        for region, cities in self.region_to_cities.items():
+            locations.append({
+                'type': 'region',
+                'name': region,
+                'value': region
+            })
+            for city in cities:
+                locations.append({
+                    'type': 'city',
+                    'name': city,
+                    'value': city,
+                    'region': region,
+                    'parent': region
+                })
+        return locations
+
+    def search_locations(self, query):
+        """Поиск локаций по запросу"""
+        query = query.lower().strip()
+        if not query:
+            return []
+
+        results = []
+        for region, cities in self.region_to_cities.items():
+            if query in region.lower():
+                results.append({
+                    'type': 'region',
+                    'name': region,
+                    'value': region
+                })
+
+            for city in cities:
+                if query in city.lower():
+                    results.append({
+                        'type': 'city',
+                        'name': city,
+                        'value': city,
+                        'region': region,
+                        'parent': region
+                    })
+
+        return results
