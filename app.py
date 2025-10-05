@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import joblib
 from city_region_mapper import CityRegionMapper
@@ -9,7 +9,7 @@ CORS(app)
 
 # Загружаем модели
 try:
-    sale_model_data = joblib.load('model/model_optimized.joblib')
+    sale_model_data = joblib.load('model/sale_model.joblib')
     sale_model = sale_model_data['model']
     sale_encoders = sale_model_data.get('encoders', {})
     print("Модель продажи успешно загружена")
@@ -42,7 +42,7 @@ encoders = {
 
 @app.route('/')
 def index():
-    return app.send_static_file('index.html')
+    return render_template('index.html')
 
 
 @app.route('/api/locations', methods=['GET'])
