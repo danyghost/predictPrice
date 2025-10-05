@@ -2,7 +2,6 @@
 
 ![Python](https://img.shields.io/badge/Python-3.7%2B-blue)
 ![Flask](https://img.shields.io/badge/Flask-2.0%2B-lightgrey)
-![License](https://img.shields.io/badge/License-MIT-green)
 
 
 ## 🌟 Особенности
@@ -82,3 +81,4 @@ realestatepredictions/
 Приложение использует локальную базу данных, включающую:
 - Все регионы Российской Федерации
 - Определенное количество городов
+
