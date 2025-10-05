@@ -25,7 +25,7 @@
 
 1. **Клонируйте репозиторий**
 ```bash
-git clone https://github.com/danyghost/realestatepredictions.git
+git clone https://github.com/danyghost/predictPrice.git
 cd realestatepredictions
 ```
 
@@ -82,5 +82,6 @@ realestatepredictions/
 Приложение использует локальную базу данных, включающую:
 - Все регионы Российской Федерации
 - Определенное количество городов
+
 
 
