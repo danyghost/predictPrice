@@ -7,16 +7,37 @@ from predict_price import predict_price_with_analogs
 app = Flask(__name__)
 CORS(app)
 
-# Загружаем модель и маппер
+# Загружаем модели
 try:
-    model_data = joblib.load('model/model_optimized.joblib')
-    model = model_data['model']
-    print("Модель успешно загружена")
+    sale_model_data = joblib.load('model/model_optimized.joblib')
+    sale_model = sale_model_data['model']
+    sale_encoders = sale_model_data.get('encoders', {})
+    print("Модель продажи успешно загружена")
 except FileNotFoundError:
-    print("Ошибка! Модель не найдена")
-    model = None
+    print("Ошибка! Модель продажи не найдена")
+    sale_model = None
+    sale_encoders = {}
 
+try:
+    rent_model_data = joblib.load('model/rent_model.joblib')
+    rent_model = rent_model_data['model']
+    print("Модель аренды успешно загружена")
+except FileNotFoundError:
+    print("Ошибка! Модель аренды не найдена")
+    rent_model = None
+
+# Загружаем мэппер
 city_mapper = CityRegionMapper('region_to_cities.json')
+
+
+models = {
+    'sale': sale_model,
+    'rent': rent_model,
+}
+
+encoders = {
+    'sale': sale_encoders
+}
 
 
 @app.route('/')
@@ -26,7 +47,7 @@ def index():
 
 @app.route('/api/locations', methods=['GET'])
 def get_locations():
-    """Получить все локации с группировкой по регионам"""
+    """Получение всех локаций с группировкой по регионам"""
     try:
         locations = []
         for region, cities in city_mapper.region_to_cities.items():
@@ -106,6 +127,13 @@ def predict_price_endpoint():
         if not deal_type:
             return jsonify({'success': False, 'error': 'Укажите тип сделки'}), 400
 
+        # Проверяем наличие модели для выбранного типа сделки
+        if deal_type not in models or models[deal_type] is None:
+            return jsonify({
+                'success': False,
+                'error': f'Модель для типа сделки "{deal_type}" не загружена'
+            }), 400
+
         # Определяем, что выбрал пользователь: город или регион
         if location in city_mapper.region_to_cities:
             # Пользователь выбрал регион - берем первый город из этого региона
@@ -147,15 +175,24 @@ def predict_price_endpoint():
             'deal_type': deal_type
         }
 
-        # Прогноз с аналогами
-        final_price, ml_price, analogs = predict_price_with_analogs(input_data)
+        # Прогноз с аналогами - передаем модель и энкодеры
+        final_price, ml_price, analogs = predict_price_with_analogs(
+            input_data,
+            model=models[deal_type],
+            encoders=encoders.get(deal_type, {})
+        )
 
-        # Форматируем аналоги для ответа
+        # Форматируем ответ в зависимости от типа сделки
+        is_rent = deal_type == 'rent'
+        price_suffix = "руб./мес" if is_rent else "руб."
+
+        # Форматируем аналоги
         analogs_formatted = []
         for analog in analogs:
+            analog_price = analog.get('price', 0)
             analogs_formatted.append({
-                'price': analog.get('price'),
-                'price_formatted': f"{analog.get('price', 0):,.0f}".replace(',', ' '),
+                'price': analog_price,
+                'price_formatted': f"{analog_price:,.0f} {price_suffix}",
                 'area': analog.get('area_total'),
                 'rooms': analog.get('rooms'),
                 'address': analog.get('address', ''),
@@ -166,9 +203,11 @@ def predict_price_endpoint():
         return jsonify({
             'success': True,
             'price': float(final_price),
-            'price_formatted': f"{float(final_price):,.0f}".replace(',', ' '),
+            'price_formatted': f"{float(final_price):,.0f} {price_suffix}",
             'ml_price': float(ml_price),
-            'ml_price_formatted': f"{float(ml_price):,.0f}".replace(',', ' '),
+            'ml_price_formatted': f"{float(ml_price):,.0f} {price_suffix}",
+            'is_rent': is_rent,
+            'price_suffix': price_suffix,
             'region': region,
             'city': city,
             'area': area,
@@ -187,7 +226,8 @@ def health_check():
     """Проверка работоспособности сервера"""
     return jsonify({
         'status': 'ok',
-        'model_loaded': model is not None,
+        'sale_model_loaded': sale_model is not None,
+        'rent_model_loaded': rent_model is not None,
         'regions_count': len(city_mapper.region_to_cities),
         'message': 'Сервер работает'
     })
@@ -195,4 +235,6 @@ def health_check():
 
 if __name__ == '__main__':
     print(f"Загружено регионов: {len(city_mapper.region_to_cities)}")
+    print(f"Модель продажи: {'загружена' if sale_model else 'не загружена'}")
+    print(f"Модель аренды: {'загружена' if rent_model else 'не загружена'}")
     app.run(debug=True, host='0.0.0.0', port=5000)

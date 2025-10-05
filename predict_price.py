@@ -17,18 +17,25 @@ except FileNotFoundError:
 # Загружаем mapping: название региона -> код
 try:
     region_mapping_df = pd.read_csv('region_mapping.csv')
-    REGION_NAME_TO_CODE = dict(zip(region_mapping_df['region_name'], region_mapping_df['region_code']))
+    region_name_to_code = dict(zip(region_mapping_df['region_name'], region_mapping_df['region_code']))
 except Exception as e:
     print(f"Ошибка загрузки region_mapping.csv: {e}")
-    REGION_NAME_TO_CODE = {}
+    region_name_to_code = {}
 
-REQUIRED_FEATURES = ['region_code', 'building_type', 'object_type', 'level', 'levels',
-                     'rooms', 'area', 'kitchen_area', 'room_size', 'floor_ratio']
+sale_required_features = [
+    'region_code', 'building_type', 'object_type', 'level', 'levels',
+    'rooms', 'area', 'kitchen_area', 'room_size', 'floor_ratio'
+]
+
+rent_required_features = [
+    'type', 'gas', 'area', 'rooms', 'kitchen_area', 'build_year', 'material',
+    'build_series_category', 'level', 'levels','rubbish_chute', 'build_overlap',
+    'build_walls', 'heating', 'city', 'floor_ratio', 'is_new_building'
+]
 
 
 def filter_outliers(prices: List[float]) -> List[float]:
-
-    # Удаляет выбросы из цен аналогов используя межквартильный размах (IQR)
+    """Удаляет выбросы из цен аналогов используя межквартильный размах (IQR)"""
     if len(prices) < 3:
         return prices
 
@@ -45,20 +52,18 @@ def filter_outliers(prices: List[float]) -> List[float]:
     return filtered.tolist()
 
 
-def prepare_input_data(input_data: Dict[str, Any]) -> pd.DataFrame:
+def prepare_sale_input_data(input_data: Dict[str, Any], encoders: dict = None) -> pd.DataFrame:
+    """Подготавливает входные данные для модели продажи"""
 
-    # Подготавливает входные данные для модели
-    if model is None:
-        raise ValueError("Модель не загружена")
+    if encoders is None:
+        encoders = {}
 
     processed_data = input_data.copy()
 
     # Преобразуем название региона в код
-    region_name = processed_data.get('region', 'Москва')
-    if region_name in REGION_NAME_TO_CODE:
-        processed_data['region_code'] = REGION_NAME_TO_CODE[region_name]
-    else:
-        processed_data['region_code'] = '77'  # Москва по умолчанию
+    region_name = processed_data.get('region')
+    if region_name in region_name_to_code:
+        processed_data['region_code'] = region_name_to_code[region_name]
 
     # Создаем engineered features
     rooms_val = processed_data.get('rooms', 1)
@@ -69,7 +74,7 @@ def prepare_input_data(input_data: Dict[str, Any]) -> pd.DataFrame:
     processed_data['room_size'] = area_val / (0.5 if rooms_val == 0 else max(rooms_val, 0.5))
     processed_data['floor_ratio'] = level_val / levels_val
 
-    # Применяем target encoding
+    # Применяем target encoding если энкодеры доступны
     cat_cols = ['region_code', 'building_type', 'object_type', 'rooms']
 
     for col in cat_cols:
@@ -86,21 +91,78 @@ def prepare_input_data(input_data: Dict[str, Any]) -> pd.DataFrame:
 
     # Создаем DataFrame с нужными признаками
     features = {}
-    for k in REQUIRED_FEATURES:
+    for k in sale_required_features:
         features[k] = processed_data.get(k, 0)
 
     return pd.DataFrame([features])
 
 
-def predict_price(input_data: Dict[str, Any]) -> float:
+def prepare_rent_input_data(input_data: Dict[str, Any]) -> pd.DataFrame:
+    """Подготавливает входные данные для модели аренды"""
+    processed_data = input_data.copy()
 
-    # Основная функция прогнозирования
-    features_df = prepare_input_data(input_data)
+    # Маппинг типов для модели аренды
+    building_type_mapping = {
+        '0': 'unknown', '1': 'panel', '2': 'monolithic',
+        '3': 'brick', '4': 'block', '5': 'wood'
+    }
+
+    object_type_mapping = {
+        '1': 'secondary', '2': 'new'
+    }
+
+    # Преобразуем типы зданий
+    building_type = str(processed_data.get('building_type', '0'))
+    processed_data['material'] = building_type_mapping.get(building_type, 'unknown')
+
+    # Преобразуем типы объектов
+    object_type = str(processed_data.get('object_type', '1'))
+    processed_data['type'] = object_type_mapping.get(object_type, 'secondary')
+
+    # Заполняем обязательные поля для модели аренды
+    processed_data['gas'] = 'unknown'
+    processed_data['build_year'] = 2000 if object_type == '2' else 1990  # Новостройка или вторичка
+    processed_data['build_series_category'] = 'unknown'
+    processed_data['rubbish_chute'] = 'unknown'
+    processed_data['build_overlap'] = 'unknown'
+    processed_data['build_walls'] = 'unknown'
+    processed_data['heating'] = 'unknown'
+    processed_data['city'] = processed_data.get('city', 'unknown')
+
+    # Создаем engineered features
+    level_val = processed_data.get('level', 1)
+    levels_val = max(processed_data.get('levels', 5), 1)
+    processed_data['floor_ratio'] = level_val / levels_val
+    processed_data['is_new_building'] = object_type == '2'
+
+    # Обработка бесконечных значений
+    processed_data['floor_ratio'] = processed_data['floor_ratio'] if not np.isinf(
+        processed_data['floor_ratio']) else 0.5
+
+    # Создаем DataFrame с нужными признаками
+    features = {}
+    for k in rent_required_features:
+        features[k] = processed_data.get(k, 'unknown') if k in ['type', 'gas', 'material', 'build_series_category',
+                                                                'rubbish_chute', 'build_overlap', 'build_walls',
+                                                                'heating', 'city'] else processed_data.get(k, 0)
+
+    return pd.DataFrame([features])
+
+
+def predict_sale_price(input_data: Dict[str, Any], model, encoders: dict = None) -> float:
+    """Прогнозирование цены для продажи"""
+    features_df = prepare_sale_input_data(input_data, encoders)
     price = float(model.predict(features_df)[0])
     return price
 
+def predict_rent_price(input_data: Dict[str, Any], model) -> float:
+    """Прогнозирование цены для аренды"""
+    features_df = prepare_rent_input_data(input_data)
+    price_log = float(model.predict(features_df)[0])
+    price = np.expm1(price_log)
+    return price
 
-def predict_price_with_analogs(input_data: Dict[str, Any]) -> Tuple[float, float, List[Dict[str, Any]]]:
+def predict_price_with_analogs(input_data: Dict[str, Any], model, encoders: dict = None) -> Tuple[float, float, List[Dict[str, Any]]]:
     """
     Прогнозирует цену с учетом аналогов с CIAN
     Возвращает: (финальная_цена, ml_прогноз, аналоги)
@@ -111,22 +173,18 @@ def predict_price_with_analogs(input_data: Dict[str, Any]) -> Tuple[float, float
         if field not in input_data or input_data[field] in (None, ''):
             raise ValueError(f"Не указан обязательный параметр: {field}")
 
-    # deal_type обязателен только для поиска аналогов
-    if 'deal_type' not in input_data or input_data['deal_type'] in (None, ''):
-        raise ValueError("Не указан обязательный параметр: deal_type")
-
     # Проверка города на валидность для cianparser
     city_name = input_data['city']
     valid_locations = cianparser.list_locations()
 
-    # Извлекаем названия городов из структуры [['Москва', '1'], ['Санкт-Петербург', '2'], ...]
+    # Извлекаем названия городов из структуры
     available_cities = []
     if isinstance(valid_locations, list):
         for loc in valid_locations:
             if isinstance(loc, list) and len(loc) >= 1:
                 available_cities.append(loc[0])  # Берем первый элемент (название города)
 
-    print(f"Доступные города: {available_cities[:10]}...")  # Покажем первые 10
+    print(f"Доступные города: {available_cities[:10]}...")
 
     # Ищем город в списке поддерживаемых (регистронезависимо)
     city_lower = city_name.lower()
@@ -144,93 +202,150 @@ def predict_price_with_analogs(input_data: Dict[str, Any]) -> Tuple[float, float
 
     print(f"Найден город в списке: {supported_city}")
 
-    # Прогноз ML
-    price_ml = predict_price(input_data)
-    print(f"ML прогноз: {price_ml:,.0f} руб.")
+    # Прогноз ML в зависимости от типа сделки
+    deal_type = input_data['deal_type']
+    if deal_type == 'sale':
+        price_ml = predict_sale_price(input_data, model, encoders)
+    else:  # rent
+        price_ml = predict_rent_price(input_data, model)
 
-    # Поиск аналогов - используем город!
+    print(f"ML прогноз ({deal_type}): {price_ml:,.0f} {'руб./мес' if deal_type == 'rent' else 'руб.'}")
+
+    # Поиск аналогов (используем город)
     analogs = get_cian_analogs(
         location=supported_city,
-        deal_type=input_data['deal_type'],
+        deal_type=deal_type,
         rooms=int(input_data['rooms']),
         area=float(input_data['area']),
         start_page=1,
         end_page=1
     )
 
-    print(f"Найдено аналогов: {len(analogs)}")
+    print(f"Найдено аналогов для {input_data['deal_type']}: {len(analogs)}")
 
-    # Расчет финальной цены с умным взвешиванием
+    # Расчет финальной цены с учетом типа сделки
     if analogs:
         prices = []
         for flat in analogs:
             if flat.get('price'):
                 try:
-                    # Очищаем цену от пробелов и символов
                     price_val = float(flat['price'])
-                    prices.append(price_val)
+                    # Для аренды проверяем адекватность цены
+                    if deal_type == 'rent':
+                        # Аренда обычно от 5к до 500к руб/мес
+                        if 8000 <= price_val <= 500000:
+                            prices.append(price_val)
+                    else:
+                        # Продажа обычно от 1 млн до 50 млн
+                        if 1000000 <= price_val <= 50000000:
+                            prices.append(price_val)
                 except (ValueError, TypeError):
                     continue
 
         if prices:
-            print(f"Цены аналогов до фильтрации: {[f'{p:,.0f}' for p in prices]}")
-
-            # Фильтруем выбросы
             filtered_prices = filter_outliers(prices)
-            print(f"Цены аналогов после фильтрации: {[f'{p:,.0f}' for p in filtered_prices]}")
 
             if filtered_prices:
-                # Используем МЕДИАНУ вместо среднего - она устойчивее к выбросам
                 price_cian = np.median(filtered_prices)
-                print(f"Медианная цена аналогов: {price_cian:,.0f} руб.")
 
-                # Простое и надежное взвешивание
-                ml_weight = 0.3  # Всегда 30% веса модели
-                cian_weight = 0.7  # 70% веса аналогам
-
-                print(f"Веса: ML={ml_weight:.2f}, CIAN={cian_weight:.2f}")
+                # Разные веса для аренды и продажи
+                if deal_type == 'rent':
+                    ml_weight = 0.4
+                    cian_weight = 0.6
+                else:
+                    ml_weight = 0.3
+                    cian_weight = 0.7
 
                 price_final = (price_ml * ml_weight + price_cian * cian_weight)
             else:
-                print("Все аналоги были отфильтрованы как выбросы, используем ML прогноз")
                 price_final = price_ml
         else:
-            print("Не удалось извлечь цены из аналогов")
             price_final = price_ml
     else:
-        print("Аналоги не найдены, используем ML прогноз")
         price_final = price_ml
 
-    print(f"Финальный прогноз: {price_final:,.0f} руб.")
+    # Форматирование вывода
+    price_type = "руб./мес" if input_data['deal_type'] == "rent" else "руб."
+    print(f"Финальный прогноз: {price_final:,.0f} {price_type}")
+
     return price_final, price_ml, analogs
 
+# Сохраняем обратную совместимость со старой версией
+def predict_price(input_data: Dict[str, Any]) -> float:
+    """Совместимость со старой версией - только для продажи"""
+    try:
+        sale_model_data = joblib.load('model/model_optimized.joblib')
+        model = sale_model_data['model']
+        encoders = sale_model_data.get('encoders', {})
+
+        features_df = prepare_sale_input_data(input_data, encoders)
+        price = float(model.predict(features_df)[0])
+        return price
+    except Exception as e:
+        print(f"Ошибка в predict_price: {e}")
+        return 0
 
 if __name__ == "__main__":
     print("Тест функции predict_price")
 
-    # Пример для теста
-    example = {
+    # Тест прогноза продажи
+    test_sale = {
         'region': 'Ростовская область',
         'city': 'Ростов-на-Дону',
         'building_type': '2',
         'object_type': '1',
         'level': 5,
-        'levels': 12,
+        'levels': 9,
         'rooms': 2,
         'area': 55.0,
         'kitchen_area': 10.0,
         'deal_type': 'sale'
     }
 
-    try:
-        result = predict_price(example)
-        print(f"Прогноз: {result:,.2f} руб.")
+    # Тест прогноза аренды
+    test_rent = {
+        'region': 'Ростовская область',
+        'city': 'Ростов-на-Дону',
+        'building_type': '2',
+        'object_type': '1',
+        'level': 5,
+        'levels': 9,
+        'rooms': 2,
+        'area': 55.0,
+        'kitchen_area': 10.0,
+        'deal_type': 'rent'
+    }
 
-        # Тест с аналогами
-        final_price, ml_price, analogs = predict_price_with_analogs(example)
-        print(f"ML прогноз: {ml_price:,.2f} руб.")
-        print(f"Финальный прогноз (с аналогами): {final_price:,.2f} руб.")
-        print(f"Найдено аналогов: {len(analogs)}")
+    try:
+        # Загружаем модели для теста
+        sale_model_data = joblib.load('model/model_optimized.joblib')
+        sale_model = sale_model_data['model']
+        sale_encoders = sale_model_data.get('encoders', {})
+
+        rent_model_data = joblib.load('model/rent_model.joblib')
+        rent_model = rent_model_data['model']
+
+        # Тест продажи
+        print("\nТест прогноза продажи")
+        final_price_sale, ml_price_sale, analogs_sale = predict_price_with_analogs(
+            test_sale,
+            model = sale_model,
+            encoders = sale_encoders
+        )
+        print(f"ML прогноз продажи: {ml_price_sale:,.2f} руб.")
+        print(f"Финальный прогноз продажи: {final_price_sale:,.2f} руб.")
+        print(f"Найдено аналогов продажи: {len(analogs_sale)}")
+
+        # Тест аренды
+        print("\nТест прогноза аренды")
+        final_price_rent, ml_price_rent, analogs_rent = predict_price_with_analogs(
+            test_rent,
+            model = rent_model,
+            encoders = {}
+        )
+        print(f"ML прогноз аренды: {ml_price_rent:,.2f} руб./мес")
+        print(f"Финальный прогноз аренды: {final_price_rent:,.2f} руб./мес")
+        print(f"Найдено аналогов аренды: {len(analogs_rent)}")
 
     except Exception as e:
         print(f"Ошибка: {e}")
