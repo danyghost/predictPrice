@@ -1,6 +1,7 @@
 # PredictPrice - Сервис для предсказания цен на квартиры
 
 ![Python](https://img.shields.io/badge/Python-3.7%2B-blue)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-1.72%2B-orange)
 ![Flask](https://img.shields.io/badge/Flask-2.0%2B-lightgrey)
 
 
@@ -81,4 +82,5 @@ realestatepredictions/
 Приложение использует локальную базу данных, включающую:
 - Все регионы Российской Федерации
 - Определенное количество городов
+
 
