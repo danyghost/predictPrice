@@ -23,7 +23,7 @@ def load_data():
 
 def preprocess_data(df):
     df = df.copy()
-    print("Начальная предобработка...")
+    print("Начальная предобработка")
 
     # Обработка пропущенных значений
     df['building_type'] = df['building_type'].fillna(-1)
@@ -135,7 +135,7 @@ def train_model_optimized():
         ))
     ])
 
-    print("Обучение модели...")
+    print("Обучение модели")
     model.fit(X_train_encoded, y_train)
 
     # Оценка
@@ -149,7 +149,7 @@ def train_model_optimized():
     print(f'Отношение MAE к средней цене: {mae / y_test.mean():.3f}')
 
     # Сохранение модели и энкодеров
-    joblib.dump({'model': model, 'encoders': encoders}, 'model/model_optimized.joblib')
+    joblib.dump({'model': model, 'encoders': encoders}, 'model/sale_model.joblib')
     print("Модель и энкодеры сохранены")
 
     return model, encoders
@@ -161,5 +161,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Ошибка в версии с category_encoders: {e}")
         import traceback
+
 
         traceback.print_exc()
