@@ -1,0 +1,486 @@
+/* ---------- Общие стили ---------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ---------- Шапка ---------- */
+.header {
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0088cc;
+}
+
+.nav a {
+    margin-left: 30px;
+    text-decoration: none;
+    color: #475569;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.nav a:hover {
+    color: #0088cc;
+}
+
+/* ---------- Герой ---------- */
+.hero {
+    padding: 60px 0;
+    background: linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+}
+
+.hero__title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 16px;
+    color: #0f172a;
+}
+
+.hero__subtitle {
+    font-size: 1.2rem;
+    text-align: center;
+    color: #475569;
+    max-width: 700px;
+    margin: 0 auto 40px;
+}
+
+/* ---------- Форма (адаптирована из твоего CSS) ---------- */
+.predict-form {
+    background: white;
+    border-radius: 28px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+    padding: 32px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.filter-group {
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.filter-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Чипы */
+.chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip {
+    padding: 8px 18px;
+    border-radius: 40px;
+    background: #f1f5f9;
+    border: 1.5px solid #cbd5e1;
+    color: #1e293b;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+}
+
+.chip.selected {
+    background: #0088cc;
+    border-color: #0088cc;
+    color: white;
+}
+
+.chip-error {
+    border-color: #e74c3c !important;
+    background: #fff0f0;
+}
+
+/* Поля ввода */
+.input-row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.input-row > div {
+    flex: 1 1 200px;
+}
+
+input[type=number],
+.location-search-input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.2s, box-shadow 0.2s;
+}
+
+input[type=number]:focus,
+.location-search-input:focus {
+    border-color: #0088cc;
+    box-shadow: 0 0 0 3px rgba(0,136,204,0.1);
+}
+
+.input-error {
+    border-color: #e74c3c !important;
+}
+
+/* Поиск локаций */
+.location-search-container {
+    position: relative;
+}
+
+.location-search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.location-search-input {
+    padding-left: 48px;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #0088cc;
+    border-top: none;
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;
+}
+
+.region-group {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.region-name {
+    padding: 12px 16px;
+    background: #f8fafc;
+    font-weight: 700;
+    color: #334155;
+    font-size: 0.9rem;
+}
+
+.city-item {
+    padding: 12px 16px 12px 32px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.city-item:hover,
+.city-item.selected {
+    background: #0088cc;
+    color: white;
+}
+
+.no-results {
+    padding: 16px;
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+}
+
+.selected-location-info {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: #e6f7ff;
+    border-radius: 16px;
+    border-left: 4px solid #0088cc;
+    display: none;
+}
+
+/* Ошибки */
+.field-error {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    min-height: 20px;
+}
+
+/* Кнопка */
+.btn {
+    display: inline-block;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 40px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    text-align: center;
+}
+
+.btn-primary {
+    background: #0088cc;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #006699;
+}
+
+.btn-primary:active {
+    transform: scale(0.97);
+}
+
+.btn-block {
+    width: 100%;
+}
+
+/* ---------- Результат ---------- */
+.result-container {
+    margin-top: 40px;
+    animation: fadeInUp 0.4s ease;
+}
+
+.result-block {
+    background: white;
+    border-radius: 28px;
+    padding: 32px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.result-price {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #0088cc;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.result-desc {
+    color: #475569;
+    font-size: 1rem;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.result-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+}
+
+.result-details div {
+    color: #334155;
+}
+
+.result-details strong {
+    color: #0f172a;
+}
+
+/* Аналоги */
+.analogs-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #0f172a;
+}
+
+.analog-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: box-shadow 0.2s;
+}
+
+.analog-card:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.analog-price {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #0088cc;
+    margin-bottom: 8px;
+}
+
+.analog-address {
+    color: #475569;
+    margin-bottom: 8px;
+}
+
+.analog-link {
+    color: #0088cc;
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.analog-link:hover {
+    text-decoration: underline;
+}
+
+/* ---------- Блоки лендинга ---------- */
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 50px;
+    color: #0f172a;
+}
+
+.how-it-works, .features {
+    padding: 80px 0;
+}
+
+.how-it-works {
+    background: white;
+}
+
+.steps {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.step {
+    flex: 1 1 250px;
+    text-align: center;
+    padding: 20px;
+}
+
+.step__icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.step h3 {
+    margin-bottom: 12px;
+    font-size: 1.3rem;
+    color: #0f172a;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+}
+
+.feature {
+    background: white;
+    padding: 30px;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s;
+}
+
+.feature:hover {
+    transform: translateY(-5px);
+}
+
+.feature h3 {
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    color: #0f172a;
+}
+
+/* ---------- Футер ---------- */
+.footer {
+    background: #1e293b;
+    color: #cbd5e1;
+    padding: 40px 0;
+    text-align: center;
+}
+
+.footer a {
+    color: #94a3b8;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    color: white;
+}
+
+/* ---------- Анимации ---------- */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ---------- Адаптивность ---------- */
+@media (max-width: 768px) {
+    .hero__title {
+        font-size: 2rem;
+    }
+    .hero__subtitle {
+        font-size: 1rem;
+    }
+    .predict-form {
+        padding: 24px 16px;
+    }
+    .input-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .nav {
+        display: none; /* для мобильных можно будет добавить бургер-меню позже */
+    }
+    .result-price {
+        font-size: 2rem;
+    }
+}

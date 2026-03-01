@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PredictPrice — умный прогноз стоимости недвижимости</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Шапка -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">🏠 PredictPrice</div>
+            <nav class="nav">
+                <a href="#how">Как работает</a>
+                <a href="#features">Преимущества</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Герой-секция с формой -->
+    <section class="hero">
+        <div class="container">
+            <h1 class="hero__title">Узнайте реальную цену квартиры за 1 минуту</h1>
+            <p class="hero__subtitle">Модель, обученная на тысячах объявлений, подскажет стоимость покупки или аренды с точностью до 92%</p>
+
+            <!-- Форма прогноза (полностью совместима с бэкендом) -->
+            <form id="predict-form" class="predict-form">
+                <!-- Тип сделки (чипы) -->
+                <div class="filter-group">
+                    <span class="filter-label">Тип сделки</span>
+                    <div class="chip-list" id="deal-type-list"></div>
+                    <div class="field-error" id="error-deal-type"></div>
+                </div>
+
+                <!-- Поиск локации (город/регион) -->
+                <div class="filter-group">
+                    <span class="filter-label">Город или регион</span>
+                    <div class="location-search-container">
+                        <svg class="location-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 12.5C13.6569 12.5 15 11.1569 15 9.5C15 7.84315 13.6569 6.5 12 6.5C10.3431 6.5 9 7.84315 9 9.5C9 11.1569 10.3431 12.5 12 12.5Z" stroke="#888" stroke-width="1.5"/>
+                            <path d="M12 22C14 18 20 15.4183 20 10C20 5.58172 16.4183 2 12 2C7.58172 2 4 5.58172 4 10C4 15.4183 10 18 12 22Z" stroke="#888" stroke-width="1.5"/>
+                        </svg>
+                        <input type="text" id="location-search" class="location-search-input" placeholder="Начните вводить название..." autocomplete="off">
+                        <div id="search-results" class="search-results"></div>
+                    </div>
+                    <div class="field-error" id="error-location"></div>
+                    <div id="selected-location-info" class="selected-location-info">
+                        <strong>Выбрано:</strong> <span id="selected-location-text"></span>
+                    </div>
+                </div>
+
+                <!-- Тип здания (чипы) -->
+                <div class="filter-group">
+                    <span class="filter-label">Тип здания</span>
+                    <div class="chip-list" id="building-type-list"></div>
+                    <div class="field-error" id="error-building-type"></div>
+                </div>
+
+                <!-- Тип объекта (чипы) -->
+                <div class="filter-group">
+                    <span class="filter-label">Тип объекта</span>
+                    <div class="chip-list" id="object-type-list"></div>
+                    <div class="field-error" id="error-object-type"></div>
+                </div>
+
+                <!-- Количество комнат (чипы) -->
+                <div class="filter-group">
+                    <span class="filter-label">Комнат</span>
+                    <div class="chip-list" id="rooms-list"></div>
+                    <div class="field-error" id="error-rooms"></div>
+                </div>
+
+                <!-- Этаж / Этажность -->
+                <div class="filter-group">
+                    <span class="filter-label">Этаж / Этажность</span>
+                    <div class="input-row">
+                        <div>
+                            <input type="number" id="level" placeholder="Этаж" min="1" max="50">
+                            <div class="field-error" id="error-level"></div>
+                        </div>
+                        <div>
+                            <input type="number" id="levels" placeholder="Всего этажей" min="1" max="50">
+                            <div class="field-error" id="error-levels"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Площадь / Кухня -->
+                <div class="filter-group">
+                    <span class="filter-label">Площадь (м²) / Кухня (м²)</span>
+                    <div class="input-row">
+                        <div>
+                            <input type="number" id="area" placeholder="Общая площадь" min="10" max="500" step="0.1">
+                            <div class="field-error" id="error-area"></div>
+                        </div>
+                        <div>
+                            <input type="number" id="kitchen_area" placeholder="Площадь кухни" min="3" max="100" step="0.1">
+                            <div class="field-error" id="error-kitchen_area"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="predict-button">Показать прогноз</button>
+            </form>
+
+            <!-- Блок результата (изначально скрыт) -->
+            <div id="result" class="result-container"></div>
+        </div>
+    </section>
+
+    <!-- Как это работает -->
+    <section id="how" class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">Как это работает</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step__icon">1️⃣</div>
+                    <h3>Введите параметры</h3>
+                    <p>Укажите город, метраж, количество комнат и другие детали. Умный поиск подскажет варианты.</p>
+                </div>
+                <div class="step">
+                    <div class="step__icon">2️⃣</div>
+                    <h3>Анализ и поиск аналогов</h3>
+                    <p>Нейросеть обрабатывает данные и находит похожие объекты из нашей базы объявлений.</p>
+                </div>
+                <div class="step">
+                    <div class="step__icon">3️⃣</div>
+                    <h3>Получите прогноз</h3>
+                    <p>Мгновенно видите реалистичную цену — для продажи или аренды, а также ссылки на аналоги.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Преимущества -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Почему выбирают PredictPrice</h2>
+            <div class="features-grid">
+                <div class="feature">
+                    <h3>🧠 Машинное обучение</h3>
+                    <p>Модели обучены на тысячах реальных сделок и объявлений с Циана.</p>
+                </div>
+                <div class="feature">
+                    <h3>📊 Актуальные данные</h3>
+                    <p>Парсер регулярно обновляет базу, чтобы прогнозы оставались точными.</p>
+                </div>
+                <div class="feature">
+                    <h3>🏙️ Все регионы РФ</h3>
+                    <p>Поддержка всех регионов и множества городов с быстрым автокомплитом.</p>
+                </div>
+                <div class="feature">
+                    <h3>⚡ Мгновенный результат</h3>
+                    <p>Не нужно ждать — расчёт занимает доли секунды.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Футер -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 PredictPrice — сервис для оценки недвижимости</p>
+            <p><a href="https://github.com/danyghost/predictPrice" target="_blank">Исходный код на GitHub</a></p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
