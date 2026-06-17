@@ -2,7 +2,7 @@ joblib==1.5.1
 Flask==2.3.3
 Flask-Cors==4.0.0
 pandas==2.3.0
-numpy==2.3.1
+numpy>=2.0.0
 lightgbm==4.6.0
 scikit-learn==1.7.2
 requests==2.31.0

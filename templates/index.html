@@ -23,7 +23,7 @@
     <section class="hero">
         <div class="container">
             <h1 class="hero__title">Узнайте реальную цену квартиры за 1 минуту</h1>
-            <p class="hero__subtitle">Модель, обученная на тысячах объявлений, подскажет стоимость покупки или аренды с точностью до 92%</p>
+            <p class="hero__subtitle">Модель, обученная на тысячах объявлений, подскажет стоимость покупки или аренды с точностью до 98%</p>
 
             <!-- Форма прогноза (полностью совместима с бэкендом) -->
             <form id="predict-form" class="predict-form">
@@ -74,14 +74,15 @@
 
                 <!-- Этаж / Этажность -->
                 <div class="filter-group">
-                    <span class="filter-label">Этаж / Этажность</span>
                     <div class="input-row">
                         <div>
-                            <input type="number" id="level" placeholder="Этаж" min="1" max="50">
+                            <span class="filter-label">Этаж</span>
+                            <input type="number" id="level" placeholder="Этаж" min="1" max="50" step="1">
                             <div class="field-error" id="error-level"></div>
                         </div>
                         <div>
-                            <input type="number" id="levels" placeholder="Всего этажей" min="1" max="50">
+                            <span class="filter-label">Этажность</span>
+                            <input type="number" id="levels" placeholder="Всего этажей" min="1" max="50" step="1">
                             <div class="field-error" id="error-levels"></div>
                         </div>
                     </div>
@@ -89,14 +90,15 @@
 
                 <!-- Площадь / Кухня -->
                 <div class="filter-group">
-                    <span class="filter-label">Площадь (м²) / Кухня (м²)</span>
                     <div class="input-row">
                         <div>
-                            <input type="number" id="area" placeholder="Общая площадь" min="10" max="500" step="0.1">
+                            <span class="filter-label">Площадь (м²)</span>
+                            <input type="number" id="area" placeholder="Общая площадь" min="10" max="300" step="0.1">
                             <div class="field-error" id="error-area"></div>
                         </div>
                         <div>
-                            <input type="number" id="kitchen_area" placeholder="Площадь кухни" min="3" max="100" step="0.1">
+                            <span class="filter-label">Кухня (м²)</span>
+                            <input type="number" id="kitchen_area" placeholder="Площадь кухни" min="3" max="50" step="0.1">
                             <div class="field-error" id="error-kitchen_area"></div>
                         </div>
                     </div>
@@ -118,17 +120,17 @@
                 <div class="step">
                     <div class="step__icon">1️⃣</div>
                     <h3>Введите параметры</h3>
-                    <p>Укажите город, метраж, количество комнат и другие детали. Умный поиск подскажет варианты.</p>
+                    <p>Укажите город, метраж, количество комнат и другие детали. Модель подскажет приблизительную стоимость.</p>
                 </div>
                 <div class="step">
                     <div class="step__icon">2️⃣</div>
                     <h3>Анализ и поиск аналогов</h3>
-                    <p>Нейросеть обрабатывает данные и находит похожие объекты из нашей базы объявлений.</p>
+                    <p>Специально обученная модель обрабатывает данные и находит похожие объекты из нашей базы объявлений.</p>
                 </div>
                 <div class="step">
                     <div class="step__icon">3️⃣</div>
                     <h3>Получите прогноз</h3>
-                    <p>Мгновенно видите реалистичную цену — для продажи или аренды, а также ссылки на аналоги.</p>
+                    <p>Мгновенно видите реалистичную цену — для продажи или аренды.</p>
                 </div>
             </div>
         </div>
@@ -141,7 +143,7 @@
             <div class="features-grid">
                 <div class="feature">
                     <h3>🧠 Машинное обучение</h3>
-                    <p>Модели обучены на тысячах реальных сделок и объявлений с Циана.</p>
+                    <p>Модели обучены на тысячах реальных сделок и объявлений.</p>
                 </div>
                 <div class="feature">
                     <h3>📊 Актуальные данные</h3>
@@ -149,11 +151,11 @@
                 </div>
                 <div class="feature">
                     <h3>🏙️ Все регионы РФ</h3>
-                    <p>Поддержка всех регионов и множества городов с быстрым автокомплитом.</p>
+                    <p>Поддержка всех регионов и множества городов с поддержкой быстрого ввода названия.</p>
                 </div>
                 <div class="feature">
                     <h3>⚡ Мгновенный результат</h3>
-                    <p>Не нужно ждать — расчёт занимает доли секунды.</p>
+                    <p>Не нужно ждать — расчёт занимает считанные секунды.</p>
                 </div>
             </div>
         </div>

@@ -16,3 +16,6 @@ dist/
 *.json
 model\
 *.joblib
+.dockerignore
+docker-compose.yml
+Dockerfile

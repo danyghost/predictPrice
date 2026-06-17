@@ -29,9 +29,117 @@ sale_required_features = [
 
 rent_required_features = [
     'type', 'gas', 'area', 'rooms', 'kitchen_area', 'build_year', 'material',
-    'build_series_category', 'level', 'levels','rubbish_chute', 'build_overlap',
+    'build_series_category', 'level', 'levels', 'rubbish_chute', 'build_overlap',
     'build_walls', 'heating', 'city', 'floor_ratio', 'is_new_building'
 ]
+
+MARKET_GROWTH_INDEX = {
+    # --- Кластер 1: Сверхвысокий рост (Мегаполисы и курортные зоны) ---
+    "Краснодарский край": {"sale": 3.20, "rent": 1.80},
+    "Калининградская область": {"sale": 2.90, "rent": 1.70},
+    "Республика Татарстан": {"sale": 2.85, "rent": 1.65},
+    "Санкт-Петербург": {"sale": 2.70, "rent": 1.60},
+    "Республика Крым": {"sale": 2.65, "rent": 1.60},
+    "Севастополь": {"sale": 2.65, "rent": 1.60},
+    "Республика Дагестан": {"sale": 2.60, "rent": 1.50},
+    "Московская область": {"sale": 2.50, "rent": 1.55},
+    "Ленинградская область": {"sale": 2.50, "rent": 1.55},
+    "Москва": {"sale": 2.45, "rent": 1.65},
+
+    # --- Кластер 2: Крупные индустриальные и экономические центры ---
+    "Новосибирская область": {"sale": 2.30, "rent": 1.45},
+    "Свердловская область": {"sale": 2.30, "rent": 1.45},
+    "Нижегородская область": {"sale": 2.30, "rent": 1.45},
+    "Тюменская область": {"sale": 2.30, "rent": 1.45},
+    "Приморский край": {"sale": 2.30, "rent": 1.45},
+    "Ростовская область": {"sale": 2.30, "rent": 1.45},
+    "Самарская область": {"sale": 2.30, "rent": 1.45},
+    "Красноярский край": {"sale": 2.30, "rent": 1.45},
+    "Челябинская область": {"sale": 2.30, "rent": 1.45},
+    "Воронежская область": {"sale": 2.30, "rent": 1.45},
+    "Иркутская область": {"sale": 2.30, "rent": 1.45},
+    "Ханты-Мансийский автономный округ — Югра": {"sale": 2.25, "rent": 1.50},
+    "Ямало-Ненецкий автономный округ": {"sale": 2.25, "rent": 1.50},
+
+    # --- Кластер 3: Стабильный умеренный рост (Средняя полоса, Поволжье, Сибирь) ---
+    "Республика Адыгея": {"sale": 2.15, "rent": 1.38},
+    "Республика Башкортостан": {"sale": 2.15, "rent": 1.38},
+    "Республика Бурятия": {"sale": 2.15, "rent": 1.38},
+    "Кабардино-Балкарская Республика": {"sale": 2.15, "rent": 1.38},
+    "Карачаево-Черкесская Республика": {"sale": 2.15, "rent": 1.38},
+    "Республика Карелия": {"sale": 2.15, "rent": 1.38},
+    "Республика Коми": {"sale": 2.15, "rent": 1.38},
+    "Республика Марий Эл": {"sale": 2.15, "rent": 1.38},
+    "Республика Мордовия": {"sale": 2.15, "rent": 1.38},
+    "Республика Саха (Якутия)": {"sale": 2.15, "rent": 1.38},
+    "Республика Северная Осетия — Алания": {"sale": 2.15, "rent": 1.38},
+    "Удмуртская Республика": {"sale": 2.15, "rent": 1.38},
+    "Республика Хакасия": {"sale": 2.15, "rent": 1.38},
+    "Чувашская Республика": {"sale": 2.15, "rent": 1.38},
+    "Алтайский край": {"sale": 2.15, "rent": 1.38},
+    "Ставропольский край": {"sale": 2.15, "rent": 1.38},
+    "Хабаровский край": {"sale": 2.15, "rent": 1.38},
+    "Амурская область": {"sale": 2.15, "rent": 1.38},
+    "Архангельская область": {"sale": 2.15, "rent": 1.38},
+    "Астраханская область": {"sale": 2.15, "rent": 1.38},
+    "Белгородская область": {"sale": 2.15, "rent": 1.38},
+    "Брянская область": {"sale": 2.15, "rent": 1.38},
+    "Владимирская область": {"sale": 2.15, "rent": 1.38},
+    "Волгоградская область": {"sale": 2.15, "rent": 1.38},
+    "Вологодская область": {"sale": 2.15, "rent": 1.38},
+    "Ивановская область": {"sale": 2.15, "rent": 1.38},
+    "Калужская область": {"sale": 2.15, "rent": 1.38},
+    "Камчатский край": {"sale": 2.15, "rent": 1.38},
+    "Кемеровская область": {"sale": 2.15, "rent": 1.38},
+    "Кировская область": {"sale": 2.15, "rent": 1.38},
+    "Костромская область": {"sale": 2.15, "rent": 1.38},
+    "Курская область": {"sale": 2.15, "rent": 1.38},
+    "Липецкая область": {"sale": 2.15, "rent": 1.38},
+    "Мурманская область": {"sale": 2.15, "rent": 1.38},
+    "Новгородская область": {"sale": 2.15, "rent": 1.38},
+    "Омская область": {"sale": 2.15, "rent": 1.38},
+    "Оренбургская область": {"sale": 2.15, "rent": 1.38},
+    "Орловская область": {"sale": 2.15, "rent": 1.38},
+    "Пензенская область": {"sale": 2.15, "rent": 1.38},
+    "Пермский край": {"sale": 2.15, "rent": 1.38},
+    "Псковская область": {"sale": 2.15, "rent": 1.38},
+    "Рязанская область": {"sale": 2.15, "rent": 1.38},
+    "Саратовская область": {"sale": 2.15, "rent": 1.38},
+    "Сахалинская область": {"sale": 2.15, "rent": 1.38},
+    "Смоленская область": {"sale": 2.15, "rent": 1.38},
+    "Тамбовская область": {"sale": 2.15, "rent": 1.38},
+    "Тверская область": {"sale": 2.15, "rent": 1.38},
+    "Томская область": {"sale": 2.15, "rent": 1.38},
+    "Тульская область": {"sale": 2.15, "rent": 1.38},
+    "Ульяновская область": {"sale": 2.15, "rent": 1.38},
+    "Забайкальский край": {"sale": 2.15, "rent": 1.38},
+    "Ярославская область": {"sale": 2.15, "rent": 1.38},
+
+    # --- Кластер 4: Специфические / Удаленные рынки с низким оборотом жилья ---
+    "Республика Алтай": {"sale": 1.90, "rent": 1.25},
+    "Республика Ингушетия": {"sale": 1.90, "rent": 1.25},
+    "Республика Калмыкия": {"sale": 1.90, "rent": 1.25},
+    "Республика Тыва": {"sale": 1.90, "rent": 1.25},
+    "Чеченская Республика": {"sale": 1.90, "rent": 1.25},
+    "Курганская область": {"sale": 1.90, "rent": 1.25},
+    "Магаданская область": {"sale": 1.90, "rent": 1.25},
+    "Еврейская автономная область": {"sale": 1.90, "rent": 1.25},
+    "Ненецкий автономный округ": {"sale": 1.90, "rent": 1.25},
+    "Чукотский автономный округ": {"sale": 1.90, "rent": 1.25},
+
+    "DEFAULT": {"sale": 2.15, "rent": 1.38}
+}
+
+
+def apply_inflation_markup(base_price: float, region_name: str, deal_type: str) -> float:
+    """Применяет коэффициент актуализации цены 2018 года к реалиям 2026 года"""
+    if not region_name:
+        return base_price * MARKET_GROWTH_INDEX["DEFAULT"].get(deal_type, 1.0)
+
+    clean_region = str(region_name).strip()
+    coefficients = MARKET_GROWTH_INDEX.get(clean_region, MARKET_GROWTH_INDEX["DEFAULT"])
+    factor = coefficients.get(deal_type, 1.0)
+    return base_price * factor
 
 
 def filter_outliers(prices: List[float]) -> List[float]:
@@ -54,7 +162,6 @@ def filter_outliers(prices: List[float]) -> List[float]:
 
 def prepare_sale_input_data(input_data: Dict[str, Any], encoders: dict = None) -> pd.DataFrame:
     """Подготавливает входные данные для модели продажи"""
-
     if encoders is None:
         encoders = {}
 
@@ -155,6 +262,7 @@ def predict_sale_price(input_data: Dict[str, Any], model, encoders: dict = None)
     price = float(model.predict(features_df)[0])
     return price
 
+
 def predict_rent_price(input_data: Dict[str, Any], model) -> float:
     """Прогнозирование цены для аренды"""
     features_df = prepare_rent_input_data(input_data)
@@ -162,7 +270,9 @@ def predict_rent_price(input_data: Dict[str, Any], model) -> float:
     price = np.expm1(price_log)
     return price
 
-def predict_price_with_analogs(input_data: Dict[str, Any], model, encoders: dict = None) -> Tuple[float, float, List[Dict[str, Any]]]:
+
+def predict_price_with_analogs(input_data: Dict[str, Any], model, encoders: dict = None) -> Tuple[
+    float, float, List[Dict[str, Any]]]:
     """
     Прогнозирует цену с учетом аналогов с CIAN
     Возвращает: (финальная_цена, ml_прогноз, аналоги)
@@ -209,19 +319,28 @@ def predict_price_with_analogs(input_data: Dict[str, Any], model, encoders: dict
     else:  # rent
         price_ml = predict_rent_price(input_data, model)
 
-    print(f"ML прогноз ({deal_type}): {price_ml:,.0f} {'руб./мес' if deal_type == 'rent' else 'руб.'}")
+    print(
+        f"Базовый ML прогноз ({deal_type}, за 2018 года): {price_ml:,.0f} {'руб./мес' if deal_type == 'rent' else 'руб.'}")
+
+    region_name = input_data.get('region', 'DEFAULT')
+    price_ml = apply_inflation_markup(price_ml, region_name, deal_type)
+    print(
+        f"Актуализированный ML прогноз с наценкой под 2026 год: {price_ml:,.0f} {'руб./мес' if deal_type == 'rent' else 'руб.'}")
 
     # Поиск аналогов (используем город)
-    analogs = get_cian_analogs(
-        location=supported_city,
-        deal_type=deal_type,
-        rooms=int(input_data['rooms']),
-        area=float(input_data['area']),
-        start_page=1,
-        end_page=1
-    )
-
-    print(f"Найдено аналогов для {input_data['deal_type']}: {len(analogs)}")
+    analogs = []
+    try:
+        analogs = get_cian_analogs(
+            location=supported_city,
+            deal_type=deal_type,
+            rooms=int(input_data['rooms']),
+            area=float(input_data['area']),
+            start_page=1,
+            end_page=1
+        )
+        print(f"Найдено аналогов для {input_data['deal_type']}: {len(analogs)}")
+    except Exception as e:
+        print(f"Не удалось собрать аналоги через парсер ({e}). Используем резервную актуализированную ML-модель.")
 
     # Расчет финальной цены с учетом типа сделки
     if analogs:
@@ -232,11 +351,9 @@ def predict_price_with_analogs(input_data: Dict[str, Any], model, encoders: dict
                     price_val = float(flat['price'])
                     # Для аренды проверяем адекватность цены
                     if deal_type == 'rent':
-                        # Аренда обычно от 5к до 500к руб/мес
                         if 8000 <= price_val <= 500000:
                             prices.append(price_val)
                     else:
-                        # Продажа обычно от 1 млн до 50 млн
                         if 1000000 <= price_val <= 50000000:
                             prices.append(price_val)
                 except (ValueError, TypeError):
@@ -270,7 +387,7 @@ def predict_price_with_analogs(input_data: Dict[str, Any], model, encoders: dict
 
     return price_final, price_ml, analogs
 
-# Сохраняем обратную совместимость со старой версией
+
 def predict_price(input_data: Dict[str, Any]) -> float:
     """Совместимость со старой версией - только для продажи"""
     try:
@@ -280,75 +397,10 @@ def predict_price(input_data: Dict[str, Any]) -> float:
 
         features_df = prepare_sale_input_data(input_data, encoders)
         price = float(model.predict(features_df)[0])
+
+        region_name = input_data.get('region', 'DEFAULT')
+        price = apply_inflation_markup(price, region_name, 'sale')
         return price
     except Exception as e:
         print(f"Ошибка в predict_price: {e}")
         return 0
-
-if __name__ == "__main__":
-    print("Тест функции predict_price")
-
-    # Тест прогноза продажи
-    test_sale = {
-        'region': 'Ростовская область',
-        'city': 'Ростов-на-Дону',
-        'building_type': '2',
-        'object_type': '1',
-        'level': 5,
-        'levels': 9,
-        'rooms': 2,
-        'area': 60.0,
-        'kitchen_area': 10.0,
-        'deal_type': 'sale'
-    }
-
-    # Тест прогноза аренды
-    test_rent = {
-        'region': 'Ростовская область',
-        'city': 'Ростов-на-Дону',
-        'building_type': '2',
-        'object_type': '1',
-        'level': 5,
-        'levels': 9,
-        'rooms': 2,
-        'area': 55.0,
-        'kitchen_area': 10.0,
-        'deal_type': 'rent'
-    }
-
-    try:
-        # Загружаем модели для теста
-        sale_model_data = joblib.load('model/sale_model.joblib')
-        sale_model = sale_model_data['model']
-        sale_encoders = sale_model_data.get('encoders', {})
-
-        rent_model_data = joblib.load('model/rent_model.joblib')
-        rent_model = rent_model_data['model']
-
-        # Тест продажи
-        print("\nТест прогноза продажи")
-        final_price_sale, ml_price_sale, analogs_sale = predict_price_with_analogs(
-            test_sale,
-            model = sale_model,
-            encoders = sale_encoders
-        )
-        print(f"ML прогноз продажи: {ml_price_sale:,.2f} руб.")
-        print(f"Финальный прогноз продажи: {final_price_sale:,.2f} руб.")
-        print(f"Найдено аналогов продажи: {len(analogs_sale)}")
-
-        # Тест аренды
-        print("\nТест прогноза аренды")
-        final_price_rent, ml_price_rent, analogs_rent = predict_price_with_analogs(
-            test_rent,
-            model = rent_model,
-            encoders = {}
-        )
-        print(f"ML прогноз аренды: {ml_price_rent:,.2f} руб./мес")
-        print(f"Финальный прогноз аренды: {final_price_rent:,.2f} руб./мес")
-        print(f"Найдено аналогов аренды: {len(analogs_rent)}")
-
-    except Exception as e:
-        print(f"Ошибка: {e}")
-        import traceback
-
-        traceback.print_exc()

@@ -3,6 +3,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    scroll-behavior: smooth;
 }
 
 body {
@@ -74,7 +75,7 @@ body {
     margin: 0 auto 40px;
 }
 
-/* ---------- Форма (адаптирована из твоего CSS) ---------- */
+/* ---------- Форма ---------- */
 .predict-form {
     background: white;
     border-radius: 28px;
@@ -95,6 +96,7 @@ body {
     color: #334155;
     margin-bottom: 8px;
     display: block;
+    text-align: left;
 }
 
 /* Чипы */
@@ -133,6 +135,7 @@ body {
     display: flex;
     gap: 15px;
     flex-wrap: wrap;
+    flex: 1 1 200px;
 }
 
 .input-row > div {
@@ -462,25 +465,54 @@ input[type=number]:focus,
     }
 }
 
-/* ---------- Адаптивность ---------- */
+/* ---------- Адаптивность для мобильных устройств ---------- */
 @media (max-width: 768px) {
+    .container {
+        padding: 0 16px;
+    }
+
     .hero__title {
-        font-size: 2rem;
+        font-size: 1.8rem;
+        line-height: 1.3;
     }
-    .hero__subtitle {
-        font-size: 1rem;
+
+    /* Исправление списка чипов (кнопок выбора) */
+    .chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        overflow-x: visible;
+        padding-bottom: 5px;
     }
-    .predict-form {
-        padding: 24px 16px;
+
+    .chip {
+        padding: 8px 14px;
+        font-size: 0.9rem;
+        white-space: nowrap;
     }
-    .input-row {
+
+    /* Исправление сетки формы ввода */
+    .form-grid {
+        display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 16px;
     }
-    .nav {
-        display: none; /* для мобильных можно будет добавить бургер-меню позже */
+
+    /* Исправление преимуществ (Features) */
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
     }
-    .result-price {
-        font-size: 2rem;
+
+    .feature {
+        padding: 20px;
+    }
+}
+
+/* Коррекция для совсем маленьких экранов */
+@media (max-width: 375px) {
+    .chip {
+        flex: 1 1 calc(50% - 8px);
+        text-align: center;
     }
 }

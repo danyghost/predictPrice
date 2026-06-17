@@ -1,7 +1,6 @@
 // ---------- Конфигурация (скопирована из твоего main.js) ----------
 const CONFIG = {
     buildingTypes: [
-        {label: "Иное", value: 0},
         {label: "Панельный", value: 1},
         {label: "Монолитный", value: 2},
         {label: "Кирпичный", value: 3},
@@ -30,7 +29,7 @@ const CONFIG = {
 let selectedLocation = { type: '', name: '', region: '' };
 let selectedChips = {
     'deal-type-list': 'sale',
-    'building-type-list': '0',
+    'building-type-list': '1',
     'object-type-list': '1',
     'rooms-list': '1'
 };
@@ -182,14 +181,14 @@ function validateForm() {
     let hasError = false;
     clearFieldErrors();
 
-    // Локация
+    // 1. Локация
     if (!selectedLocation.name || !selectedLocation.region) {
         showFieldError('error-location', 'Выберите город из списка');
         document.getElementById('location-search').classList.add('input-error');
         hasError = true;
     }
 
-    // Чипы
+    // 2. Чипы
     const dealType = getSelected('deal-type-list');
     const buildingType = getSelected('building-type-list');
     const objectType = getSelected('object-type-list');
@@ -212,31 +211,104 @@ function validateForm() {
         hasError = true;
     }
 
-    // Числовые поля
-    const level = document.getElementById('level').value;
-    const levels = document.getElementById('levels').value;
-    const area = document.getElementById('area').value;
-    const kitchen = document.getElementById('kitchen_area').value;
+    // 3. Числовые поля (получаем сырые строковые значения)
+    const levelRaw = document.getElementById('level').value.trim();
+    const levelsRaw = document.getElementById('levels').value.trim();
+    const areaRaw = document.getElementById('area').value.trim();
+    const kitchenRaw = document.getElementById('kitchen_area').value.trim();
 
-    if (!level) {
+    // Проверка на заполненность
+    if (!levelRaw) {
         showFieldError('error-level', 'Укажите этаж');
         document.getElementById('level').classList.add('input-error');
         hasError = true;
     }
-    if (!levels) {
+    if (!levelsRaw) {
         showFieldError('error-levels', 'Укажите этажность');
         document.getElementById('levels').classList.add('input-error');
         hasError = true;
     }
-    if (!area) {
+    if (!areaRaw) {
         showFieldError('error-area', 'Укажите общую площадь');
         document.getElementById('area').classList.add('input-error');
         hasError = true;
     }
-    if (!kitchen) {
+    if (!kitchenRaw) {
         showFieldError('error-kitchen_area', 'Укажите площадь кухни');
         document.getElementById('kitchen_area').classList.add('input-error');
         hasError = true;
+    }
+
+    // 4. Глубокая валидация чисел (если все поля заполнены)
+    if (!hasError) {
+        const level = parseInt(levelRaw, 10);
+        const levels = parseInt(levelsRaw, 10);
+        const area = parseFloat(areaRaw);
+        const kitchen = parseFloat(kitchenRaw);
+
+        // Проверка на корректность ввода чисел и положительные значения
+        if (isNaN(level) || level <= 0) {
+            showFieldError('error-level', 'Этаж должен быть положительным числом');
+            document.getElementById('level').classList.add('input-error');
+            hasError = true;
+        }
+        if (isNaN(levels) || levels <= 0) {
+            showFieldError('error-levels', 'Этажность должна быть положительным числом');
+            document.getElementById('levels').classList.add('input-error');
+            hasError = true;
+        }
+        if (isNaN(area) || area <= 0) {
+            showFieldError('error-area', 'Площадь должна быть больше 0');
+            document.getElementById('area').classList.add('input-error');
+            hasError = true;
+        }
+        if (isNaN(kitchen) || kitchen <= 0) {
+            showFieldError('error-kitchen_area', 'Площадь кухни должна быть больше 0');
+            document.getElementById('kitchen_area').classList.add('input-error');
+            hasError = true;
+        }
+
+        // 5. Логические правила
+        if (!hasError) {
+            // Кухня физически не может быть больше или равна всей квартире
+            if (kitchen >= area) {
+                showFieldError('error-kitchen_area', 'Площадь кухни не может быть больше или равна общей площади квартиры');
+                document.getElementById('kitchen_area').classList.add('input-error');
+                hasError = true;
+            }
+            // Кухня не может занимать более 35% от общей площади квартиры
+            else if (kitchen > area * 0.35) {
+                showFieldError('error-kitchen_area', 'Площадь кухни не может превышать 35% от общей площади');
+                document.getElementById('kitchen_area').classList.add('input-error');
+                hasError = true;
+            }
+
+            // 3. Проверка остаточной (некухонной) площади с учетом типа жилья
+            if (!hasError) {
+                const remainingArea = area - kitchen; // Пространство под комнаты, коридор и санузел
+                const isStudio = (Number(rooms) === -1); // Проверяем, выбрана ли студия в чипах
+
+                if (isStudio) {
+                    // Ограничения для студий (кухня — это зона в едином пространстве)
+                    if (kitchen > 10) {
+                        showFieldError('error-kitchen_area', 'В квартирах-студиях площадь кухонной зоны обычно не превышает 10 м²');
+                        document.getElementById('kitchen_area').classList.add('input-error');
+                        hasError = true;
+                    } else if (remainingArea < 12) {
+                        showFieldError('error-kitchen_area', 'Слишком мало места для жилой зоны и санузла');
+                        document.getElementById('kitchen_area').classList.add('input-error');
+                        hasError = true;
+                    }
+                } else {
+                    // Ограничения для стандартных квартир (1, 2, 3+ комнатные)
+                    if (remainingArea < 16) {
+                        showFieldError('error-kitchen_area', 'Остаточная жилая площадь слишком мала для полноценной квартиры');
+                        document.getElementById('kitchen_area').classList.add('input-error');
+                        hasError = true;
+                    }
+                }
+            }
+        }
     }
 
     return !hasError;
