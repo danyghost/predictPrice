@@ -71,6 +71,10 @@ function renderChips(list, containerId, single = true) {
                 container.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
                 chip.classList.add('selected');
                 selectedChips[containerId] = chip.dataset.value;
+
+                if (containerId === 'rooms-list') {
+                    updateKitchenLabel(chip.dataset.value);
+                }
             } else {
                 chip.classList.toggle('selected');
             }
@@ -82,11 +86,47 @@ function renderChips(list, containerId, single = true) {
 
         container.appendChild(chip);
     });
+
+    if (containerId === 'rooms-list') {
+        updateKitchenLabel(selectedChips[containerId]);
+    }
 }
 
 function getSelected(containerId) {
     const sel = document.querySelector(`#${containerId} .chip.selected`);
     return sel ? sel.dataset.value : selectedChips[containerId] || null;
+}
+
+// Замена названия и управление валидацией, если выбрана Студия
+function updateKitchenLabel(roomsValue) {
+    const kitchenInput = document.getElementById('kitchen_area');
+    const kitchenBlock = document.getElementById('kitchen-block');
+    if (!kitchenInput || !kitchenBlock) return;
+
+    console.log("Вызвана updateKitchenLabel. Значение комнат:", roomsValue);
+
+    if (Number(roomsValue) === -1 || roomsValue === '-1' || roomsValue === 'Студия') {
+        kitchenBlock.style.display = 'none';
+        kitchenInput.value = '0';
+
+        kitchenInput.removeAttribute('min');
+        kitchenInput.removeAttribute('max');
+        kitchenInput.removeAttribute('required');
+    } else {
+        kitchenBlock.style.display = 'block';
+
+        if (kitchenInput.value === '0' || kitchenInput.value === 0) {
+            kitchenInput.value = '';
+        }
+
+        kitchenInput.setAttribute('min', '3');
+        kitchenInput.setAttribute('max', '50');
+        kitchenInput.setAttribute('required', 'true');
+
+        const kitchenLabel = kitchenBlock.querySelector('.filter-label');
+        if (kitchenLabel) kitchenLabel.textContent = 'Кухня (м²)';
+        kitchenInput.placeholder = 'Площадь кухни';
+    }
 }
 
 // ---------- Поиск локаций (использует /api/search-locations) ----------
@@ -99,7 +139,38 @@ async function searchLocations(query) {
     try {
         const response = await fetch(`/api/search-locations?q=${encodeURIComponent(query)}`);
         if (!response.ok) throw new Error('Ошибка поиска');
-        const locations = await response.json();
+
+        let locations = await response.json();
+
+        // --- СОРТИРОВКА ПО РЕЛЕВАНТНОСТИ ---
+        const q = query.toLowerCase();
+        locations.sort((a, b) => {
+            const nameA = a.name.toLowerCase();
+            const nameB = b.name.toLowerCase();
+
+            // Точное совпадение
+            if (nameA === q && nameB !== q) return -1;
+            if (nameB === q && nameA !== q) return 1;
+
+            // Название начинается с искомого текста
+            const startsA = nameA.startsWith(q);
+            const startsB = nameB.startsWith(q);
+            if (startsA && !startsB) return -1;
+            if (startsB && !startsA) return 1;
+
+            // Позиция подстроки (чем ближе совпадение к началу слова, тем выше)
+            const indexA = nameA.indexOf(q);
+            const indexB = nameB.indexOf(q);
+            if (indexA !== indexB) return indexA - indexB;
+
+            // Длина строки (более короткие и точные названия городов идут выше)
+            if (nameA.length !== nameB.length) return nameA.length - nameB.length;
+
+            // Алфавитный порядок (если все предыдущие параметры совпали)
+            return nameA.localeCompare(nameB);
+        });
+        // ------------------------------------
+
         renderSearchResults(locations);
     } catch (error) {
         console.error('Ошибка поиска:', error);
@@ -115,27 +186,38 @@ function renderSearchResults(locations) {
         return;
     }
 
-    // Группировка по регионам (как в твоём main.js)
+    // Группировка по регионам с сохранением исходного порядка
     const grouped = {};
+    const regionOrder = [];
+
     locations.forEach(loc => {
         if (loc.type === 'region') {
-            if (!grouped[loc.value]) grouped[loc.value] = { region: loc, cities: [] };
+            if (!grouped[loc.value]) {
+                grouped[loc.value] = { region: loc, cities: [] };
+                regionOrder.push(loc.value);
+            }
         } else {
-            if (!grouped[loc.region]) grouped[loc.region] = { region: { name: loc.region, value: loc.region }, cities: [] };
+            if (!grouped[loc.region]) {
+                grouped[loc.region] = { region: { name: loc.region, value: loc.region }, cities: [] };
+                regionOrder.push(loc.region);
+            }
             grouped[loc.region].cities.push(loc);
         }
     });
 
-    const sortedRegions = Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'ru'));
-
     let html = '';
-    sortedRegions.forEach(regionName => {
+
+    regionOrder.forEach(regionName => {
         const group = grouped[regionName];
-        const sortedCities = group.cities.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+
+        if (!group.cities || group.cities.length === 0) {
+            return;
+        }
+
         html += `
             <div class="region-group">
                 <div class="region-name">${group.region.name || regionName}</div>
-                ${sortedCities.map(city => `
+                ${group.cities.map(city => `
                     <div class="city-item" data-type="city" data-name="${city.name}" data-region="${city.region}">
                         ${city.name}
                     </div>
@@ -143,6 +225,12 @@ function renderSearchResults(locations) {
             </div>
         `;
     });
+
+    if (html === '') {
+        elements.searchResults.innerHTML = '<div class="no-results">Ничего не найдено</div>';
+        elements.searchResults.style.display = 'block';
+        return;
+    }
 
     elements.searchResults.innerHTML = html;
     elements.searchResults.style.display = 'block';
@@ -262,7 +350,10 @@ function validateForm() {
             document.getElementById('area').classList.add('input-error');
             hasError = true;
         }
-        if (isNaN(kitchen) || kitchen <= 0) {
+
+        const isStudio = Number(selectedChips['rooms-list']) === -1;
+
+        if (!isStudio && (isNaN(kitchen) || kitchen <= 0)) {
             showFieldError('error-kitchen_area', 'Площадь кухни должна быть больше 0');
             document.getElementById('kitchen_area').classList.add('input-error');
             hasError = true;
@@ -282,31 +373,10 @@ function validateForm() {
                 document.getElementById('kitchen_area').classList.add('input-error');
                 hasError = true;
             }
-
-            // 3. Проверка остаточной (некухонной) площади с учетом типа жилья
-            if (!hasError) {
-                const remainingArea = area - kitchen; // Пространство под комнаты, коридор и санузел
-                const isStudio = (Number(rooms) === -1); // Проверяем, выбрана ли студия в чипах
-
-                if (isStudio) {
-                    // Ограничения для студий (кухня — это зона в едином пространстве)
-                    if (kitchen > 10) {
-                        showFieldError('error-kitchen_area', 'В квартирах-студиях площадь кухонной зоны обычно не превышает 10 м²');
-                        document.getElementById('kitchen_area').classList.add('input-error');
-                        hasError = true;
-                    } else if (remainingArea < 12) {
-                        showFieldError('error-kitchen_area', 'Слишком мало места для жилой зоны и санузла');
-                        document.getElementById('kitchen_area').classList.add('input-error');
-                        hasError = true;
-                    }
-                } else {
-                    // Ограничения для стандартных квартир (1, 2, 3+ комнатные)
-                    if (remainingArea < 16) {
-                        showFieldError('error-kitchen_area', 'Остаточная жилая площадь слишком мала для полноценной квартиры');
-                        document.getElementById('kitchen_area').classList.add('input-error');
-                        hasError = true;
-                    }
-                }
+            else if (area - kitchen < 16) {
+                showFieldError('error-kitchen_area', 'Остаточная жилая площадь слишком мала для полноценной квартиры');
+                document.getElementById('kitchen_area').classList.add('input-error');
+                hasError = true;
             }
         }
     }
@@ -364,7 +434,7 @@ async function handleSubmit(e) {
     }
 }
 
-// ---------- Отображение результата (с учётом аналогов) ----------
+// ---------- Отображение результата ----------
 function renderResult(data) {
     const isRent = data.is_rent || false;
     const priceSuffix = isRent ? '₽/мес' : '₽';
@@ -383,11 +453,13 @@ function renderResult(data) {
         });
     }
 
+    const roomsText = Number(data.rooms) === -1 ? 'Студия' : data.rooms;
+
     const detailsHtml = `
         <div><strong>Регион:</strong> ${data.region}</div>
         <div><strong>Город:</strong> ${data.city}</div>
         <div><strong>Площадь:</strong> ${data.area} м²</div>
-        <div><strong>Комнат:</strong> ${data.rooms}</div>
+        <div><strong>Комнат:</strong> ${roomsText}</div>
         ${!isRent ? `<div><strong>Цена за м²:</strong> ${Math.round(data.price / data.area).toLocaleString('ru-RU')} ₽</div>` : ''}
     `;
 

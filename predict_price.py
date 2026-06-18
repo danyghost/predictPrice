@@ -187,8 +187,18 @@ def prepare_sale_input_data(input_data: Dict[str, Any], encoders: dict = None) -
     for col in cat_cols:
         if col in processed_data and col in encoders:
             try:
-                # Энкодеры ожидают DataFrame
-                col_df = pd.DataFrame({col: [str(processed_data[col])]})
+                val = processed_data[col]
+                if isinstance(val, str):
+                    if val.isdigit():
+                        val = int(val)
+                    else:
+                        try:
+                            val = float(val)
+                        except ValueError:
+                            pass
+
+                # Передаем чистое значение без str()
+                col_df = pd.DataFrame({col: [val]})
                 encoded_array = encoders[col].transform(col_df)
                 encoded_value = float(encoded_array.iloc[0])
                 processed_data[col] = encoded_value

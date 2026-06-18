@@ -79,8 +79,10 @@ def search_locations():
 
         results = []
         for region, cities in city_mapper.region_to_cities.items():
-            # Проверяем регион
-            if query in region.lower():
+            is_region_match = query in region.lower()
+
+            # Если регион совпал, добавляем сам регион
+            if is_region_match:
                 results.append({
                     'type': 'region',
                     'name': region,
@@ -89,7 +91,7 @@ def search_locations():
 
             # Проверяем города
             for city in cities:
-                if query in city.lower():
+                if query in city.lower() or is_region_match:
                     results.append({
                         'type': 'city',
                         'name': city,
@@ -113,7 +115,7 @@ def search_locations():
 
 
 @app.route('/api/predict', methods=['POST'])
-def predict_price_endpoint():
+def predict():
     """Предсказание цены с учетом аналогов"""
     try:
         data = request.get_json()
